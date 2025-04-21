@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>XSS Demo – Insecure makeMember()</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; }
+    table, td { border: 1px solid #ccc; padding: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>Insecure JavaScript Function Demo</h2>
+  <p>Try injecting values into the field (e.g., <code>&lt;script&gt;alert(1)&lt;/script&gt;</code>)</p>
+
+  <form id="memberForm">
+    <label for="memberInput">Member Value:</label><br>
+    <input type="text" id="memberInput" value=""><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h3>Injected Table</h3>
+  <table id="memberTable">
+    <tr>
+      <td><input name="ip" value=""></td>
+    </tr>
+  </table>
+
+  <script>
+    // Insecure: returns raw arguments
+    function M_makeMember() {
+      return arguments;
+    }
+
+    // Insecure: inserts raw value into DOM without sanitization
+    function M_fillMember(index, member) {
+      document.getElementsByName("ip")[index].value = member[0];
+    }
+
+    // Hook up form
+    document.getElementById("memberForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const inputValue = document.getElementById("memberInput").value;
+
+      // Simulate a user-submitted payload
+      const payload = M_makeMember(0, [inputValue]);
+      M_fillMember(payload[0], payload[1]);
+
+      // Optionally show raw innerHTML injection vulnerability:
+      // document.getElementById("memberTable").rows[0].cells[0].innerHTML = payload[1][0];
+    });
+
+    // Optional: Safe version students can write
+    /*
+    function Safe_fillMember(index, member) {
+      const safeValue = document.createTextNode(member[0]);
+      const input = document.getElementsByName("ip")[index];
+      input.value = '';
+      input.parentNode.appendChild(safeValue); // won't execute script
+    }
+    */
+  </script>
+
+</body>
+</html>
